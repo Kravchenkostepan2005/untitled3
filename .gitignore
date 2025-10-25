@@ -1,1 +1,7 @@
 *.o
+*.o
+build/
+cmake-build-*/
+*.ninja
+run_tests
+run_tests.dSYM/
