@@ -1,0 +1,25 @@
+Serving on 4320
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":72965320,"timeUnixNano":"1759500732003603000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:12:12] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":72975330,"timeUnixNano":"1759500742014181000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:12:22] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":72985340,"timeUnixNano":"1759500752021713000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:12:32] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":72995350,"timeUnixNano":"1759500762028939000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:12:42] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":73005360,"timeUnixNano":"1759500772037354000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:12:52] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":73015360,"timeUnixNano":"1759500782043293000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:13:02] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":73025370,"timeUnixNano":"1759500792049580000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:13:12] "POST /v1/metrics HTTP/1.1" 200 -
+127.0.0.1 /v1/metrics len=184
+{"resourceMetrics":[{"scopeMetrics":[{"metrics":[{"name":"snmp.1.3.6.1.2.1.1.3.0","unit":"ms","gauge":{"dataPoints":[{"asDouble":73035380,"timeUnixNano":"1759500802058429000"}]}}]}]}]}
+127.0.0.1 - - [03/Oct/2025 16:13:22] "POST /v1/metrics HTTP/1.1" 200 -
