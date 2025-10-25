@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #ifndef OID_H
 #define OID_H
 

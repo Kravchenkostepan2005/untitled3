@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #define _POSIX_C_SOURCE 200809L
 #include "otlp.h"
 #include <string.h>

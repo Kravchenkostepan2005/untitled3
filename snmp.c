@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #include "snmp.h"
 #include "ber.h"
 #include <string.h>

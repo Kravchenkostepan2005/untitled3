@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #ifndef SNMP_H
 #define SNMP_H
 

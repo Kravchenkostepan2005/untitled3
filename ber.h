@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #ifndef BER_H
 #define BER_H
 

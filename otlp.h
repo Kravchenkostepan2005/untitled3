@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #ifndef OTLP_H
 #define OTLP_H
 

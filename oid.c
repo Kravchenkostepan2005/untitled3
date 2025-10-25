@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #include "oid.h"
 #include <string.h>
 #include <ctype.h>

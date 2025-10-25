@@ -1,3 +1,7 @@
+/*
+ * Author: Stepan Kravchenko (xkravc03)
+ */
+
 #include "mapping.h"
 #include <stdio.h>
 #include <stdlib.h>
