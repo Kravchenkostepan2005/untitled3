@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 			case 'p': cfg.port = atoi(optarg); break;
 			case 'm': strncpy(cfg.mapping_file, optarg, sizeof(cfg.mapping_file)-1); break;
 			case 'v': cfg.verbose = 1; break;
-			default: usage(); return 1;
+			default: usage(); return 0;
 		}
 	}
 	if (cfg.target[0] == '\0' || cfg.oids_file[0] == '\0' || cfg.endpoint_url[0] == '\0' || cfg.interval <= 0) { usage(); return 1; }
