@@ -339,6 +339,11 @@ def _pick_member(members: Dict[str, str], dataset: str, year: int) -> str:
         dataset.upper(),
         dataset.capitalize(),
     }
+    roots = {
+        name.split("/", 1)[0]
+        for name in members.values()
+        if "/" in name
+    }
     candidates = []
     for variant in variants:
         prefix = f"I{variant}"
@@ -350,10 +355,19 @@ def _pick_member(members: Dict[str, str], dataset: str, year: int) -> str:
                 f"{variant}/{year}/{prefix}.xls",
             ]
         )
+        for root in roots:
+            candidates.append(f"{root}/{year}/{prefix}.xls")
     for candidate in candidates:
         key = candidate.lower()
         if key in members:
             return members[key]
+    # fall back to scanning any member that contains /{year}/I<dataset>.xls
+    suffix = f"/i{dataset.lower()}.xls"
+    year_fragment = f"/{year}/"
+    for original in members.values():
+        lower_name = original.lower()
+        if year_fragment in lower_name and lower_name.endswith(suffix):
+            return original
     raise FileNotFoundError(f"Soubor pro dataset '{dataset}' a rok {year} nebyl v archivu nalezen.")
 
 
