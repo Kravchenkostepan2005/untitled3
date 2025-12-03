@@ -1,0 +1,74 @@
+Neterminál,Vstup / FOLLOW,Produkce
+Program,import,Program → Prolog Class
+Prolog,import,Prolog → import 'ifj25' for Ifj EOL
+Class,class,Class → class 'Program' { EOL FuncList }
+FuncList,static,FuncList → FuncDecl FuncList
+FuncList,"} , $",FuncList → ε
+FuncDecl,static,FuncDecl → static id FuncHead Block EOL
+FuncHead,(,FuncHead → ( ParamListOpt )
+FuncHead,=,FuncHead → = ( id )
+FuncHead,{,FuncHead → ε
+ParamListOpt,id,ParamListOpt → ParamList
+ParamListOpt,),ParamListOpt → ε
+ParamList,id,ParamList → id ParamTail
+ParamTail,",","ParamTail → , id ParamTail"
+ParamTail,),ParamTail → ε
+Block,{,Block → { EOL SequenceBlock }
+SequenceBlock,"{, var, if, while, return, id, global_id, Ifj",SequenceBlock → Sequence EOL SequenceBlock
+SequenceBlock,},SequenceBlock → ε
+Sequence,{,Sequence → Block
+Sequence,var,Sequence → var id
+Sequence,if,Sequence → if ( Expr ) Block else Block
+Sequence,while,Sequence → while ( Expr ) Block
+Sequence,return,Sequence → return Expr
+Sequence,id,Sequence → id = Expr
+Sequence,global_id,Sequence → global_id = Expr
+Sequence,Ifj,Sequence → Ifj . id ( ArgListOpt )
+ArgListOpt,VALUE,ArgListOpt → ArgList
+ArgListOpt,),ArgListOpt → ε
+ArgList,VALUE,ArgList → Term ArgTail
+ArgTail,",","ArgTail → , Term ArgTail"
+ArgTail,),ArgTail → ε
+Term,num_lit,Term → num_lit
+Term,str_lit,Term → str_lit
+Term,null,Term → null
+Term,id,Term → id
+Term,global_id,Term → global_id
+Expr,CALL,Expr → LogicOr
+LogicOr,CALL,LogicOr → LogicAnd LogicOrTail
+LogicOrTail,||,LogicOrTail → || LogicAnd LogicOrTail
+LogicOrTail,FOLLOW₁,LogicOrTail → ε
+LogicAnd,CALL,LogicAnd → Equality LogicAndTail
+LogicAndTail,&&,LogicAndTail → && Equality LogicAndTail
+LogicAndTail,{ || } ∪ FOLLOW₁,LogicAndTail → ε
+Equality,CALL,Equality → IsExpr EqualityTail
+EqualityTail,"== , !=",EqualityTail → (== | !=) IsExpr EqualityTail
+EqualityTail,"{ &&, || } ∪ FOLLOW₁",EqualityTail → ε
+IsExpr,CALL,IsExpr → Relational IsExprTail
+IsExprTail,is,IsExprTail → is TypeKeyword IsExprTail
+IsExprTail,"{ ==, !=, &&, || } ∪ FOLLOW₁",IsExprTail → ε
+TypeKeyword,KEYWORD(String),TypeKeyword → KEYWORD(String)
+TypeKeyword,KEYWORD(Num),TypeKeyword → KEYWORD(Num)
+TypeKeyword,KEYWORD(Null),TypeKeyword → KEYWORD(Null)
+Relational,CALL,Relational → Additive RelationalTail
+RelationalTail,"<, <=, >, >=",RelationalTail → ( < | <= | > | >= ) Additive RelationalTail
+RelationalTail,"{ is, ==, !=, &&, || } ∪ FOLLOW₁",RelationalTail → ε
+Additive,CALL,Additive → Multiplicative AdditiveTail
+AdditiveTail,"+, -",AdditiveTail → ( + | - ) Multiplicative AdditiveTail
+AdditiveTail,"{ <, <=, >, >= } ∪ FOLLOW(RelationalTail)",AdditiveTail → ε
+Multiplicative,CALL,Multiplicative → Unary MultiplicativeTail
+MultiplicativeTail,"*, /",MultiplicativeTail → ( * | / ) Unary MultiplicativeTail
+MultiplicativeTail,"{ +, - } ∪ FOLLOW(AdditiveTail)",MultiplicativeTail → ε
+Unary,!,Unary → ! Unary
+Unary,+,Unary → + Unary
+Unary,-,Unary → - Unary
+Unary,CALL,Unary → Primary
+Primary,num_lit,Primary → num_lit
+Primary,str_lit,Primary → str_lit
+Primary,null,Primary → null
+Primary,gident,Primary → gident
+Primary,(,Primary → ( Expr )
+Primary,id,Primary → id PrimaryIdentTail
+Primary,Ifj,Primary → Ifj . id ( ArgListOpt )
+PrimaryIdentTail,(,PrimaryIdentTail → ( ArgListOpt )
+PrimaryIdentTail,FOLLOW_PI,PrimaryIdentTail → ε
