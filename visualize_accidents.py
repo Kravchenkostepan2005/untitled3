@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import sklearn.cluster
 from scipy.spatial import ConvexHull
-from shapely.geometry import Polygon, box
+from shapely.geometry import Polygon, box, MultiPoint
 from shapely.ops import unary_union
 from sklearn.preprocessing import StandardScaler
 
@@ -92,24 +92,18 @@ def get_kraj_boundary(gdf: geopandas.GeoDataFrame, kraj_kod: int) -> geopandas.G
     # Převod do jednotného CRS (5514)
     kraj_points = kraj_points.to_crs(epsg=5514)
 
-    # Vytvoření bounding boxu všech bodů v kraji s odstraněním extrémů
-    points_coords = np.array([[geom.x, geom.y] for geom in kraj_points.geometry])
-    if len(points_coords) < 3:
+    # Vytvoření obálky bodů v kraji
+    point_list = [geom for geom in kraj_points.geometry if geom is not None]
+    if len(point_list) == 0:
         return None
 
-    lower_q = 2
-    upper_q = 98
-    min_x, max_x = np.percentile(points_coords[:, 0], [lower_q, upper_q])
-    min_y, max_y = np.percentile(points_coords[:, 1], [lower_q, upper_q])
+    multipoint = MultiPoint(point_list)
+    hull = multipoint.convex_hull
+    if hull.is_empty:
+        return None
 
-    # Rozšíření o 5 km (5000 metrů)
-    buffer = 5000
-    min_x -= buffer
-    max_x += buffer
-    min_y -= buffer
-    max_y += buffer
-
-    polygon = box(min_x, min_y, max_x, max_y)
+    # Rozšíření o 5 km (5000 metrů) kolem konvexní obálky
+    polygon = hull.buffer(5000)
 
     # Vytvoření GeoDataFrame
     kraj_boundary = geopandas.GeoDataFrame(
