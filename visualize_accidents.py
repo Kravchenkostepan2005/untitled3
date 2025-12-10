@@ -13,6 +13,7 @@ import pandas as pd
 import sklearn.cluster
 from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon, box
+from shapely.ops import unary_union
 from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings('ignore')
@@ -148,6 +149,31 @@ def _add_basemap(ax: plt.Axes, bounds: np.ndarray) -> None:
     _apply_bounds(ax, bounds)
 
 
+def _mask_outside_kraj(ax: plt.Axes, kraj_boundary: geopandas.GeoDataFrame) -> None:
+    """Zabarví oblast mimo vybraný kraj na bílo, aby zůstal viditelný jen on."""
+    if kraj_boundary is None or kraj_boundary.empty:
+        return
+
+    union = unary_union(kraj_boundary.geometry)
+    if union.is_empty:
+        return
+
+    min_x, min_y, max_x, max_y = kraj_boundary.total_bounds
+    outer = box(min_x - 1000, min_y - 1000, max_x + 1000, max_y + 1000)
+    mask_geom = outer.difference(union.buffer(0))
+
+    if mask_geom.is_empty:
+        return
+
+    geopandas.GeoSeries([mask_geom], crs=kraj_boundary.crs).plot(
+        ax=ax,
+        color='white',
+        edgecolor='none',
+        alpha=1.0,
+        zorder=5,
+    )
+
+
 def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
              show_figure: bool = False):
     """
@@ -182,6 +208,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
 
     # ---- Podgraf pro rok 2023 ----
     _add_basemap(ax1, bounds)
+    _mask_outside_kraj(ax1, kraj_boundary)
 
     kraj_boundary.boundary.plot(ax=ax1, color='black', linewidth=2)
     if len(gdf_2023) > 0:
@@ -196,6 +223,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
 
     # ---- Podgraf pro rok 2024 ----
     _add_basemap(ax2, bounds)
+    _mask_outside_kraj(ax2, kraj_boundary)
 
     kraj_boundary.boundary.plot(ax=ax2, color='black', linewidth=2)
     if len(gdf_2024) > 0:
@@ -259,6 +287,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
         _add_basemap(ax, bounds)
+        _mask_outside_kraj(ax, kraj_boundary)
 
         kraj_boundary.boundary.plot(ax=ax, color='black', linewidth=2)
         kraj_boundary.plot(ax=ax, color='lightgray', alpha=0.3, edgecolor='black', linewidth=1)
@@ -288,6 +317,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
         _add_basemap(ax, bounds)
+        _mask_outside_kraj(ax, kraj_boundary)
 
         kraj_boundary.boundary.plot(ax=ax, color='black', linewidth=2)
         kraj_boundary.plot(ax=ax, color='none', edgecolor='black', linewidth=1, alpha=0.5)
@@ -382,6 +412,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
     fig, ax = plt.subplots(1, 1, figsize=(12, 8))
 
     _add_basemap(ax, bounds)
+    _mask_outside_kraj(ax, kraj_boundary)
 
     kraj_boundary.boundary.plot(ax=ax, color='black', linewidth=2)
     kraj_boundary.plot(ax=ax, color='none', edgecolor='black', linewidth=1, alpha=0.5)
