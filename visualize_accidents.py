@@ -128,6 +128,7 @@ def _apply_bounds(ax: plt.Axes, bounds: np.ndarray) -> None:
 def _add_basemap(ax: plt.Axes, bounds: np.ndarray) -> None:
     """Přidá podkladovou mapu bez resetu rozsahu os."""
     min_x, min_y, max_x, max_y = bounds
+    _apply_bounds(ax, bounds)
     try:
         img, ext = contextily.bounds2img(
             min_x,
@@ -139,7 +140,19 @@ def _add_basemap(ax: plt.Axes, bounds: np.ndarray) -> None:
         )
         ax.imshow(img, extent=ext, origin='upper')
     except Exception:
-        contextily.add_basemap(ax, source=contextily.providers.CartoDB.Positron, crs='EPSG:3857')
+        try:
+            contextily.add_basemap(
+                ax,
+                source=contextily.providers.CartoDB.Positron,
+                crs='EPSG:3857',
+                reset_extent=False,
+            )
+        except TypeError:
+            contextily.add_basemap(
+                ax,
+                source=contextily.providers.CartoDB.Positron,
+                crs='EPSG:3857',
+            )
     _apply_bounds(ax, bounds)
 
 
