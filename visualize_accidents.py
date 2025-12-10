@@ -5,15 +5,14 @@ import os
 import re
 import warnings
 
-import contextily
+import contextily as ctx
 import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sklearn.cluster
 from scipy.spatial import ConvexHull
-from shapely.geometry import Polygon, box, MultiPoint
-from shapely.ops import unary_union
+from shapely.geometry import Polygon, MultiPoint
 from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings('ignore')
@@ -117,68 +116,53 @@ def get_kraj_boundary(gdf: geopandas.GeoDataFrame, kraj_kod: int) -> geopandas.G
     return kraj_boundary
 
 
-def _apply_bounds(ax: plt.Axes, bounds: np.ndarray) -> None:
-    """Nastaví limity os podle hranic kraje a zabrání autoscale."""
-    ax.set_xlim(bounds[0], bounds[2])
-    ax.set_ylim(bounds[1], bounds[3])
-    ax.set_aspect('equal', adjustable='box')
-    ax.set_autoscale_on(False)
+def _compute_bounds(gdf: geopandas.GeoDataFrame, padding: float = 5000.0) -> tuple[float, float, float, float]:
+    """Vrátí ohraničující box všech bodů rozšířený o daný buffer."""
+    if gdf.empty:
+        return None
 
+    min_x, min_y, max_x, max_y = gdf.total_bounds
+    if not np.isfinite([min_x, min_y, max_x, max_y]).all():
+        return None
 
-def _add_basemap(ax: plt.Axes, bounds: np.ndarray) -> None:
-    """Přidá podkladovou mapu bez resetu rozsahu os."""
-    min_x, min_y, max_x, max_y = bounds
-    _apply_bounds(ax, bounds)
-    try:
-        img, ext = contextily.bounds2img(
-            min_x,
-            min_y,
-            max_x,
-            max_y,
-            epsg=3857,
-            source=contextily.providers.CartoDB.Positron,
-        )
-        ax.imshow(img, extent=ext, origin='upper')
-    except Exception:
-        try:
-            contextily.add_basemap(
-                ax,
-                source=contextily.providers.CartoDB.Positron,
-                crs='EPSG:3857',
-                reset_extent=False,
-            )
-        except TypeError:
-            contextily.add_basemap(
-                ax,
-                source=contextily.providers.CartoDB.Positron,
-                crs='EPSG:3857',
-            )
-    _apply_bounds(ax, bounds)
-
-
-def _mask_outside_kraj(ax: plt.Axes, kraj_boundary: geopandas.GeoDataFrame) -> None:
-    """Zabarví oblast mimo vybraný kraj na bílo, aby zůstal viditelný jen on."""
-    if kraj_boundary is None or kraj_boundary.empty:
-        return
-
-    union = unary_union(kraj_boundary.geometry)
-    if union.is_empty:
-        return
-
-    min_x, min_y, max_x, max_y = kraj_boundary.total_bounds
-    outer = box(min_x - 1000, min_y - 1000, max_x + 1000, max_y + 1000)
-    mask_geom = outer.difference(union.buffer(0))
-
-    if mask_geom.is_empty:
-        return
-
-    geopandas.GeoSeries([mask_geom], crs=kraj_boundary.crs).plot(
-        ax=ax,
-        color='white',
-        edgecolor='none',
-        alpha=1.0,
-        zorder=5,
+    return (
+        min_x - padding,
+        min_y - padding,
+        max_x + padding,
+        max_y + padding,
     )
+
+
+def _add_basemap_with_bounds(ax: plt.Axes, bounds: tuple[float, float, float, float]) -> None:
+    """Nastaví pohled na daný box a přidá podkladovou mapu podobně jako v ukázkovém řešení."""
+    if bounds is None:
+        return
+
+    min_x, min_y, max_x, max_y = bounds
+
+    ax.set_xlim(min_x, max_x)
+    ax.set_ylim(min_y, max_y)
+    ax.set_aspect('equal', adjustable='box')
+    ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+    for spine in ax.spines.values():
+        spine.set_color('#DADADA')
+
+    try:
+        ctx.add_basemap(
+            ax,
+            crs='EPSG:3857',
+            source=ctx.providers.CartoDB.Positron,
+            reset_extent=False,
+        )
+    except TypeError:
+        ctx.add_basemap(
+            ax,
+            crs='EPSG:3857',
+            source=ctx.providers.CartoDB.Positron,
+        )
+
+    ax.set_xlim(min_x, max_x)
+    ax.set_ylim(min_y, max_y)
 
 
 def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
@@ -196,26 +180,29 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         print(f"⚠ Nelze získat hranice kraje {KRAJ_KOD}")
         return
 
-    # Filtrace a příprava dat (váš stávající kód zůstává)
+    # Filtrace a příprava dat
     gdf_kraj = gdf[gdf['p5a'] == KRAJ_KOD].copy()
+    if gdf_kraj.empty:
+        print(f"⚠ V datech nejsou žádné záznamy pro kraj {KRAJ_KOD}")
+        return
+
+    gdf_kraj = gdf_kraj.to_crs(epsg=3857)
     gdf_zver = gdf_kraj[gdf_kraj['p10'] == 4].copy()
     gdf_2023 = gdf_zver[gdf_zver['year'] == 2023].copy()
     gdf_2024 = gdf_zver[gdf_zver['year'] == 2024].copy()
 
+    bounds = _compute_bounds(gdf_kraj)
+    if bounds is None:
+        print(f"⚠ Nelze spočítat rozsah pro kraj {KRAJ_KOD}")
+        return
+
     kraj_boundary = kraj_boundary.to_crs(epsg=3857)
-    if len(gdf_2023) > 0:
-        gdf_2023 = gdf_2023.to_crs(epsg=3857)
-    if len(gdf_2024) > 0:
-        gdf_2024 = gdf_2024.to_crs(epsg=3857)
 
     # Vytvoření grafu
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
-    bounds = kraj_boundary.total_bounds
-
     # ---- Podgraf pro rok 2023 ----
-    _add_basemap(ax1, bounds)
-    _mask_outside_kraj(ax1, kraj_boundary)
+    _add_basemap_with_bounds(ax1, bounds)
 
     kraj_boundary.boundary.plot(ax=ax1, color='black', linewidth=2)
     if len(gdf_2023) > 0:
@@ -226,11 +213,9 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
     ax1.set_xlabel('Východní délka [m]')
     ax1.set_ylabel('Severní šířka [m]')
     ax1.grid(True, alpha=0.3, linestyle='--')
-    _apply_bounds(ax1, bounds)
 
     # ---- Podgraf pro rok 2024 ----
-    _add_basemap(ax2, bounds)
-    _mask_outside_kraj(ax2, kraj_boundary)
+    _add_basemap_with_bounds(ax2, bounds)
 
     kraj_boundary.boundary.plot(ax=ax2, color='black', linewidth=2)
     if len(gdf_2024) > 0:
@@ -241,7 +226,6 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
     ax2.set_xlabel('Východní délka [m]')
     ax2.set_ylabel('Severní šířka [m]')
     ax2.grid(True, alpha=0.3, linestyle='--')
-    _apply_bounds(ax2, bounds)
 
     plt.tight_layout()
     if fig_location:
@@ -280,21 +264,29 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
 
     # Filtrace na kraj 2 a nehody s alkoholem (p11 >= 4)
     gdf_kraj = gdf[gdf['p5a'] == KRAJ_KOD].copy()
+    if gdf_kraj.empty:
+        print(f"⚠ V datech nejsou žádné záznamy pro kraj {KRAJ_KOD}")
+        return
+
+    gdf_kraj = gdf_kraj.to_crs(epsg=3857)
+    bounds = _compute_bounds(gdf_kraj)
+    if bounds is None:
+        print(f"⚠ Nelze spočítat rozsah pro kraj {KRAJ_KOD}")
+        return
+
     gdf_alkohol = gdf_kraj[gdf_kraj['p11'] >= 4].copy()
 
     print(f"Celkem nehod v kraji {KRAJ_KOD}: {len(gdf_kraj)}")
     print(f"Nehody s alkoholem (p11 >= 4) v kraji {KRAJ_KOD}: {len(gdf_alkohol)}")
 
     kraj_boundary = kraj_boundary.to_crs(epsg=3857)
-    bounds = kraj_boundary.total_bounds
 
     if len(gdf_alkohol) == 0:
         print(f"⚠ V kraji {KRAJ_KOD} nejsou žádné nehody s alkoholem (p11 >= 4)")
         print("Vytvářím prázdný graf...")
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-        _add_basemap(ax, bounds)
-        _mask_outside_kraj(ax, kraj_boundary)
+        _add_basemap_with_bounds(ax, bounds)
 
         kraj_boundary.boundary.plot(ax=ax, color='black', linewidth=2)
         kraj_boundary.plot(ax=ax, color='lightgray', alpha=0.3, edgecolor='black', linewidth=1)
@@ -304,7 +296,6 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         ax.set_title(f'Nehody s alkoholem (p11 >= 4) v kraji {KRAJ_KOD}')
         ax.set_xlabel('Východní délka [m]')
         ax.set_ylabel('Severní šířka [m]')
-        _apply_bounds(ax, bounds)
         plt.tight_layout()
 
         if fig_location:
@@ -317,14 +308,11 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
             plt.close(fig)
         return
 
-    gdf_alkohol = gdf_alkohol.to_crs(epsg=3857)
-
     if len(gdf_alkohol) < 10:
         print(f"⚠ V kraji {KRAJ_KOD} je příliš málo nehod s alkoholem ({len(gdf_alkohol)}), vytvářím jednoduchý graf")
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
-        _add_basemap(ax, bounds)
-        _mask_outside_kraj(ax, kraj_boundary)
+        _add_basemap_with_bounds(ax, bounds)
 
         kraj_boundary.boundary.plot(ax=ax, color='black', linewidth=2)
         kraj_boundary.plot(ax=ax, color='none', edgecolor='black', linewidth=1, alpha=0.5)
@@ -337,7 +325,6 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         ax.set_xlabel('Východní délka [m]')
         ax.set_ylabel('Severní šířka [m]')
         ax.grid(True, alpha=0.3, linestyle='--')
-        _apply_bounds(ax, bounds)
         plt.tight_layout()
 
         if fig_location:
@@ -418,8 +405,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
 
     fig, ax = plt.subplots(1, 1, figsize=(12, 8))
 
-    _add_basemap(ax, bounds)
-    _mask_outside_kraj(ax, kraj_boundary)
+    _add_basemap_with_bounds(ax, bounds)
 
     kraj_boundary.boundary.plot(ax=ax, color='black', linewidth=2)
     kraj_boundary.plot(ax=ax, color='none', edgecolor='black', linewidth=1, alpha=0.5)
