@@ -190,6 +190,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
     ax1.set_xlabel('Východní délka [m]')
     ax1.set_ylabel('Severní šířka [m]')
     ax1.grid(True, alpha=0.3, linestyle='--')
+    _apply_bounds(ax1, bounds)
 
     # ---- Podgraf pro rok 2024 ----
     _add_basemap(ax2, bounds)
@@ -203,6 +204,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
     ax2.set_xlabel('Východní délka [m]')
     ax2.set_ylabel('Severní šířka [m]')
     ax2.grid(True, alpha=0.3, linestyle='--')
+    _apply_bounds(ax2, bounds)
 
     plt.tight_layout()
     if fig_location:
@@ -264,6 +266,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         ax.set_title(f'Nehody s alkoholem (p11 >= 4) v kraji {KRAJ_KOD}')
         ax.set_xlabel('Východní délka [m]')
         ax.set_ylabel('Severní šířka [m]')
+        _apply_bounds(ax, bounds)
         plt.tight_layout()
 
         if fig_location:
@@ -295,6 +298,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         ax.set_xlabel('Východní délka [m]')
         ax.set_ylabel('Severní šířka [m]')
         ax.grid(True, alpha=0.3, linestyle='--')
+        _apply_bounds(ax, bounds)
         plt.tight_layout()
 
         if fig_location:
@@ -422,6 +426,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str | None = None,
         cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
         cbar.set_label('Počet nehod v oblasti', fontsize=10)
 
+    _apply_bounds(ax, bounds)
     plt.tight_layout()
 
     if fig_location:
