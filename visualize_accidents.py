@@ -119,9 +119,11 @@ def get_kraj_boundary(gdf: geopandas.GeoDataFrame, kraj_kod: int) -> geopandas.G
 
 
 def _apply_bounds(ax: plt.Axes, bounds: np.ndarray) -> None:
-    """Nastaví limity os podle hranic kraje"""
+    """Nastaví limity os podle hranic kraje a zabrání autoscale."""
     ax.set_xlim(bounds[0], bounds[2])
     ax.set_ylim(bounds[1], bounds[3])
+    ax.set_aspect('equal', adjustable='box')
+    ax.set_autoscale_on(False)
 
 
 def _add_basemap(ax: plt.Axes, bounds: np.ndarray) -> None:
