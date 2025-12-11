@@ -5,7 +5,7 @@ import os
 import re
 import warnings
 
-import contextily as ctx
+import contextily
 import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
@@ -148,17 +148,17 @@ def _add_basemap_with_bounds(ax: plt.Axes, bounds: tuple[float, float, float, fl
         spine.set_color('#DADADA')
 
     try:
-        ctx.add_basemap(
+        contextily.add_basemap(
             ax,
             crs='EPSG:3857',
-            source=ctx.providers.CartoDB.Positron,
+            source=contextily.providers.CartoDB.Positron,
             reset_extent=False,
         )
     except TypeError:
-        ctx.add_basemap(
+        contextily.add_basemap(
             ax,
             crs='EPSG:3857',
-            source=ctx.providers.CartoDB.Positron,
+            source=contextily.providers.CartoDB.Positron,
         )
 
     ax.set_xlim(min_x, max_x)
